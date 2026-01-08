@@ -1,0 +1,28 @@
+# Docker Compose for Raspberry Pi with microphone support
+services:
+  assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile.rpi
+    ports:
+      - "8080:8080"
+    devices:
+      - /dev/snd:/dev/snd
+    group_add:
+      - audio
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./audio:/app/audio
+      # For PulseAudio support (optional)
+      - /run/user/1000/pulse:/run/user/1000/pulse
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - TUYA_CLIENT_ID=${TUYA_CLIENT_ID}
+      - TUYA_SECRET=${TUYA_SECRET}
+      - ALEXA_AUTH_TOKEN=${ALEXA_AUTH_TOKEN:-}
+      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN:-}
+      - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY:-}
+      - PULSE_SERVER=unix:/run/user/1000/pulse/native
+    restart: unless-stopped
+

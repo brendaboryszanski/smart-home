@@ -1,0 +1,49 @@
+{
+  "manifest": {
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:XXXXXXXXXXXX:function:smart-home-alexa"
+        }
+      }
+    },
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "es-AR": {
+          "name": "Casa Control",
+          "summary": "Controla tu casa inteligente con comandos de voz",
+          "description": "Skill para controlar dispositivos Tuya mediante comandos de voz naturales. Prende luces, activa escenas y más.",
+          "examplePhrases": [
+            "Alexa, dile a casa control que prenda la luz",
+            "Alexa, dile a casa control que active escena cine",
+            "Alexa, dile a casa control que apague todo"
+          ],
+          "keywords": ["casa", "inteligente", "luces", "tuya", "domótica"]
+        },
+        "es-MX": {
+          "name": "Casa Control",
+          "summary": "Controla tu casa inteligente con comandos de voz",
+          "description": "Skill para controlar dispositivos Tuya mediante comandos de voz naturales.",
+          "examplePhrases": [
+            "Alexa, dile a casa control que prenda la luz",
+            "Alexa, dile a casa control que active escena cine",
+            "Alexa, dile a casa control que apague todo"
+          ],
+          "keywords": ["casa", "inteligente", "luces", "tuya", "domótica"]
+        },
+        "es-ES": {
+          "name": "Casa Control",
+          "summary": "Controla tu casa inteligente con comandos de voz",
+          "description": "Skill para controlar dispositivos Tuya mediante comandos de voz naturales.",
+          "examplePhrases": [
+            "Alexa, dile a casa control que encienda la luz",
+            "Alexa, dile a casa control que active escena cine",
+            "Alexa, dile a casa control que apague todo"
+          ],
+          "keywords": ["casa", "inteligente", "luces", "tuya", "domótica"]
+        }
+      }
+    }
+  }
+}

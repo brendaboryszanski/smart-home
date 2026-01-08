@@ -1,0 +1,42 @@
+# Dockerfile for Raspberry Pi with PortAudio support (microphone)
+FROM golang:1.23-bookworm AS builder
+
+RUN apt-get update && apt-get install -y \
+    portaudio19-dev \
+    libasound2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY go.mod go.sum* ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o /assistant ./cmd/assistant
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    tzdata \
+    libportaudio2 \
+    libasound2 \
+    alsa-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /assistant .
+COPY config.example.yaml config.yaml
+
+RUN useradd -m -u 1000 assistant && \
+    usermod -aG audio assistant
+USER assistant
+
+EXPOSE 8080
+
+ENTRYPOINT ["./assistant"]
+CMD ["-config", "config.yaml"]
+

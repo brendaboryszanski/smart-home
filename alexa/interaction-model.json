@@ -1,0 +1,72 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "amor",
+      "intents": [
+        {
+          "name": "SmartHomeIntent",
+          "slots": [
+            {
+              "name": "command",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "{command}",
+            "que {command}",
+            "quiero {command}",
+            "quiero que {command}",
+            "por favor {command}",
+            "ejecuta {command}",
+            "ejecutar {command}",
+            "activa {command}",
+            "activar {command}",
+            "enciende {command}",
+            "encender {command}",
+            "prende {command}",
+            "prender {command}",
+            "apaga {command}",
+            "apagar {command}",
+            "pon {command}",
+            "pone {command}",
+            "configura {command}",
+            "cambia {command}",
+            "sube {command}",
+            "baja {command}",
+            "escena {command}",
+            "modo {command}"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": [
+            "ayuda",
+            "que puedo hacer",
+            "que comandos hay",
+            "como funciona"
+          ]
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": [
+            "para",
+            "detente",
+            "basta"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": [
+            "cancela",
+            "cancelar",
+            "olvidalo"
+          ]
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        }
+      ]
+    }
+  }
+}

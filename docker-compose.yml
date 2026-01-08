@@ -1,0 +1,20 @@
+services:
+  assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./audio:/app/audio
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - TUYA_CLIENT_ID=${TUYA_CLIENT_ID}
+      - TUYA_SECRET=${TUYA_SECRET}
+      - ALEXA_AUTH_TOKEN=${ALEXA_AUTH_TOKEN:-}
+      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN:-}
+      - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY:-}
+    restart: unless-stopped
+

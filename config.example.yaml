@@ -1,0 +1,51 @@
+# Smart Home Assistant Configuration
+
+audio:
+  # Source: http, file, microphone
+  source: http
+
+  # For HTTP source: address to listen on
+  http_addr: ":8080"
+
+  # Auth token for /alexa endpoint (optional but recommended)
+  # Generate a random token: openssl rand -hex 32
+  # Leave empty to disable authentication (not recommended for public endpoints)
+  auth_token: "${ALEXA_AUTH_TOKEN}"
+
+  # For file source: directory to watch for audio files
+  file_dir: "./audio"
+
+  # For microphone source
+  wake_word: "home"
+  sample_rate: 16000
+
+openai:
+  # Whisper API key (use env var for security)
+  api_key: "${OPENAI_API_KEY}"
+  language: "en"
+
+anthropic:
+  # Claude API key (use env var for security)
+  api_key: "${ANTHROPIC_API_KEY}"
+  model: "claude-sonnet-4-20250514"
+
+tuya:
+  # Tuya Cloud credentials (use env vars for security)
+  client_id: "${TUYA_CLIENT_ID}"
+  secret: "${TUYA_SECRET}"
+  # Region: us, eu, cn, in
+  region: "us"
+  # How often to sync devices/scenes from Tuya
+  sync_interval: "5m"
+
+pushover:
+  # Optional: for push notifications to your phone
+  enabled: false
+  token: "${PUSHOVER_TOKEN}"
+  user_key: "${PUSHOVER_USER_KEY}"
+
+log:
+  # Level: debug, info, warn, error
+  level: "info"
+  # Format: text, json
+  format: "text"

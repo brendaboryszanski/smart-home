@@ -1,0 +1,14 @@
+{
+  "name": "smart-home-alexa-skill",
+  "version": "1.0.0",
+  "description": "Alexa Skill Lambda para Smart Home Assistant",
+  "main": "index.js",
+  "scripts": {
+    "zip": "zip -r function.zip index.js",
+    "deploy": "aws lambda update-function-code --function-name smart-home-alexa --zip-file fileb://function.zip"
+  },
+  "keywords": ["alexa", "smart-home", "lambda"],
+  "author": "",
+  "license": "MIT"
+}
+

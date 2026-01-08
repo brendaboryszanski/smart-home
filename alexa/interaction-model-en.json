@@ -1,0 +1,66 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "home",
+      "intents": [
+        {
+          "name": "SmartHomeIntent",
+          "slots": [
+            {
+              "name": "command",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "{command}",
+            "to {command}",
+            "please {command}",
+            "execute {command}",
+            "run {command}",
+            "activate {command}",
+            "turn on {command}",
+            "turn off {command}",
+            "switch on {command}",
+            "switch off {command}",
+            "set {command}",
+            "change {command}",
+            "dim {command}",
+            "brighten {command}",
+            "scene {command}",
+            "mode {command}"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": [
+            "help",
+            "what can I do",
+            "what commands are available",
+            "how does this work"
+          ]
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": [
+            "stop",
+            "quit",
+            "exit"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": [
+            "cancel",
+            "never mind",
+            "forget it"
+          ]
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        }
+      ]
+    }
+  }
+}
+
