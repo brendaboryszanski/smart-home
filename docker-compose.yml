@@ -9,10 +9,10 @@ services:
       - ./config.yaml:/app/config.yaml:ro
       - ./audio:/app/audio
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - TUYA_CLIENT_ID=${TUYA_CLIENT_ID}
-      - TUYA_SECRET=${TUYA_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - HOMEASSISTANT_TOKEN=${HOMEASSISTANT_TOKEN}
       - ALEXA_AUTH_TOKEN=${ALEXA_AUTH_TOKEN:-}
       - PUSHOVER_TOKEN=${PUSHOVER_TOKEN:-}
       - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY:-}

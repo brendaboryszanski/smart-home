@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"smart-home/internal/domain"
 	"smart-home/internal/infra/anthropic"
@@ -25,6 +26,8 @@ func (m *mockRegistry) Summary() string {
 ## Escenas:
 - Buenas Noches`
 }
+
+func (m *mockRegistry) StartPeriodicSync(_ context.Context, _ time.Duration) {}
 
 func TestClaudeClient_Parse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

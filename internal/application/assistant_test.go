@@ -103,6 +103,8 @@ func (m *mockRegistry) FindSceneByName(name string) (*domain.Scene, bool) {
 	return nil, false
 }
 
+func (m *mockRegistry) StartPeriodicSync(_ context.Context, _ time.Duration) {}
+
 func TestAssistant_ProcessCommand(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 

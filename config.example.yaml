@@ -1,51 +1,76 @@
 # Smart Home Assistant Configuration
+# ==================================
+#
+# Copy this file to config.yaml and fill in your values.
+# Use ${VAR_NAME} to reference environment variables.
+
+# ==============================================================================
+# AUDIO INPUT - Choose ONE source
+# ==============================================================================
+# Options:
+#   - http: Receives text commands via HTTP (for Alexa, webhooks)
+#   - file: Watches a directory for audio files
+#   - microphone: Direct voice input with wake word (requires -tags portaudio)
 
 audio:
-  # Source: http, file, microphone
   source: http
 
-  # For HTTP source: address to listen on
+  # --- HTTP source settings (only if source: http) ---
   http_addr: ":8080"
+  auth_token: "${ALEXA_AUTH_TOKEN}"  # Optional. Generate: openssl rand -hex 32
 
-  # Auth token for /alexa endpoint (optional but recommended)
-  # Generate a random token: openssl rand -hex 32
-  # Leave empty to disable authentication (not recommended for public endpoints)
-  auth_token: "${ALEXA_AUTH_TOKEN}"
+  # --- File source settings (only if source: file) ---
+  # file_dir: "./audio"
 
-  # For file source: directory to watch for audio files
-  file_dir: "./audio"
+  # --- Microphone source settings (only if source: microphone) ---
+  # wake_word: "home"
+  # sample_rate: 16000
 
-  # For microphone source
-  wake_word: "home"
-  sample_rate: 16000
+# ==============================================================================
+# LLM FOR INTENT PARSING - Configure ONE (Anthropic OR Gemini)
+# ==============================================================================
+# You only need ONE of these. The system will use whichever has an API key.
+# If both are configured, Anthropic takes priority.
 
-openai:
-  # Whisper API key (use env var for security)
-  api_key: "${OPENAI_API_KEY}"
-  language: "en"
-
+# Option 1: Anthropic Claude
 anthropic:
-  # Claude API key (use env var for security)
   api_key: "${ANTHROPIC_API_KEY}"
   model: "claude-sonnet-4-20250514"
 
-tuya:
-  # Tuya Cloud credentials (use env vars for security)
-  client_id: "${TUYA_CLIENT_ID}"
-  secret: "${TUYA_SECRET}"
-  # Region: us, eu, cn, in
-  region: "us"
-  # How often to sync devices/scenes from Tuya
+# Option 2: Google Gemini (alternative to Anthropic)
+# gemini:
+#   api_key: "${GEMINI_API_KEY}"
+#   model: "gemini-2.0-flash"
+
+# ==============================================================================
+# SPEECH-TO-TEXT - Only needed for audio input (file or microphone sources)
+# ==============================================================================
+# NOT needed if you only use Alexa/HTTP text commands.
+
+# openai:
+#   api_key: "${OPENAI_API_KEY}"
+#   language: "en"
+
+# ==============================================================================
+# SMART HOME BACKEND - Home Assistant
+# ==============================================================================
+# Works with Tuya Local integration - no cloud subscription needed!
+# To get your token: Home Assistant -> Profile -> Long-Lived Access Tokens
+
+homeassistant:
+  url: "http://homeassistant.local:8123"  # Your Home Assistant URL
+  token: "${HOMEASSISTANT_TOKEN}"
   sync_interval: "5m"
 
+# ==============================================================================
+# OPTIONAL
+# ==============================================================================
+
 pushover:
-  # Optional: for push notifications to your phone
   enabled: false
-  token: "${PUSHOVER_TOKEN}"
-  user_key: "${PUSHOVER_USER_KEY}"
+  # token: "${PUSHOVER_TOKEN}"
+  # user_key: "${PUSHOVER_USER_KEY}"
 
 log:
-  # Level: debug, info, warn, error
-  level: "info"
-  # Format: text, json
-  format: "text"
+  level: "info"   # Options: debug, info, warn, error
+  format: "text"  # Options: text, json

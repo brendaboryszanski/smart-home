@@ -8,12 +8,14 @@ import (
 )
 
 type Config struct {
-	Audio     AudioConfig     `yaml:"audio"`
-	OpenAI    OpenAIConfig    `yaml:"openai"`
-	Anthropic AnthropicConfig `yaml:"anthropic"`
-	Tuya      TuyaConfig      `yaml:"tuya"`
-	Pushover  PushoverConfig  `yaml:"pushover"`
-	Log       LogConfig       `yaml:"log"`
+	Audio         AudioConfig         `yaml:"audio"`
+	OpenAI        OpenAIConfig        `yaml:"openai"`
+	Anthropic     AnthropicConfig     `yaml:"anthropic"`
+	Gemini        GeminiConfig        `yaml:"gemini"`
+	Tuya          TuyaConfig          `yaml:"tuya"`
+	HomeAssistant HomeAssistantConfig `yaml:"homeassistant"`
+	Pushover      PushoverConfig      `yaml:"pushover"`
+	Log           LogConfig           `yaml:"log"`
 }
 
 type AudioConfig struct {
@@ -35,10 +37,21 @@ type AnthropicConfig struct {
 	Model  string `yaml:"model"`
 }
 
+type GeminiConfig struct {
+	APIKey string `yaml:"api_key"`
+	Model  string `yaml:"model"`
+}
+
 type TuyaConfig struct {
 	ClientID     string `yaml:"client_id"`
 	Secret       string `yaml:"secret"`
 	Region       string `yaml:"region"`
+	SyncInterval string `yaml:"sync_interval"`
+}
+
+type HomeAssistantConfig struct {
+	URL          string `yaml:"url"`
+	Token        string `yaml:"token"`
 	SyncInterval string `yaml:"sync_interval"`
 }
 
@@ -90,11 +103,17 @@ func (c *Config) setDefaults() {
 	if c.Anthropic.Model == "" {
 		c.Anthropic.Model = "claude-sonnet-4-20250514"
 	}
+	if c.Gemini.Model == "" {
+		c.Gemini.Model = "gemini-2.0-flash"
+	}
 	if c.Tuya.Region == "" {
 		c.Tuya.Region = "us"
 	}
 	if c.Tuya.SyncInterval == "" {
 		c.Tuya.SyncInterval = "5m"
+	}
+	if c.HomeAssistant.SyncInterval == "" {
+		c.HomeAssistant.SyncInterval = "5m"
 	}
 	if c.Log.Level == "" {
 		c.Log.Level = "info"

@@ -91,6 +91,8 @@ func (s *staticRegistry) FindSceneByName(name string) (*domain.Scene, bool) {
 	return nil, false
 }
 
+func (s *staticRegistry) StartPeriodicSync(_ context.Context, _ time.Duration) {}
+
 func TestIntegration_WithSampleAudios(t *testing.T) {
 	audioDir := "../testdata/audio"
 
@@ -168,7 +170,7 @@ func TestIntegration_TextCommandFromAlexa(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	recorder := &testRecorder{}
 
-	httpSource := audio.NewHTTPSource(":0", logger)
+	httpSource := audio.NewHTTPSource(":0", "", logger)
 
 	stt := &recordingSTT{recorder: recorder, results: map[int]string{}}
 	intent := &recordingIntent{

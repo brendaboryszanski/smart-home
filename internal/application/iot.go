@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"time"
 
 	"smart-home/internal/domain"
 )
@@ -18,5 +19,6 @@ type DeviceRegistry interface {
 	FindDeviceByName(name string) (*domain.Device, bool)
 	FindSceneByName(name string) (*domain.Scene, bool)
 	Summary() string
+	StartPeriodicSync(ctx context.Context, interval time.Duration)
 }
 

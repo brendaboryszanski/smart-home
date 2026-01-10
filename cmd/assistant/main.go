@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -13,9 +14,10 @@ import (
 	"smart-home/internal/application"
 	"smart-home/internal/infra/anthropic"
 	"smart-home/internal/infra/audio"
+	"smart-home/internal/infra/gemini"
+	"smart-home/internal/infra/homeassistant"
 	"smart-home/internal/infra/openai"
 	"smart-home/internal/infra/pushover"
-	"smart-home/internal/infra/tuya"
 )
 
 func main() {
@@ -43,17 +45,18 @@ func main() {
 
 	audioSource := createAudioSource(cfg.Audio, logger)
 
-	whisperClient := openai.NewWhisperClient(cfg.OpenAI.APIKey, cfg.OpenAI.Language)
-	claudeClient := anthropic.NewClaudeClient(cfg.Anthropic.APIKey, cfg.Anthropic.Model)
+	// Create STT client only if needed (not needed for text-only sources like Alexa)
+	sttClient := createSTTClient(cfg, logger)
 
-	tuyaClient := tuya.NewClient(cfg.Tuya.ClientID, cfg.Tuya.Secret, cfg.Tuya.Region)
-	registry := tuya.NewRegistry(tuyaClient, logger)
-
-	syncInterval, err := time.ParseDuration(cfg.Tuya.SyncInterval)
+	// Create intent parser (Anthropic or Gemini - whichever has an API key)
+	intentParser, err := createIntentParser(cfg, logger)
 	if err != nil {
-		logger.Warn("invalid sync interval, using default", "error", err, "value", cfg.Tuya.SyncInterval)
-		syncInterval = 5 * time.Minute
+		logger.Error("creating intent parser", "error", err)
+		os.Exit(1)
 	}
+
+	// Create IoT controller and registry (Home Assistant or Tuya)
+	iotController, registry, syncInterval := createIoTBackend(cfg, logger)
 	if syncInterval > 0 {
 		registry.StartPeriodicSync(ctx, syncInterval)
 	}
@@ -67,9 +70,9 @@ func main() {
 
 	assistant := application.NewAssistant(
 		audioSource,
-		whisperClient,
-		claudeClient,
-		tuyaClient,
+		sttClient,
+		intentParser,
+		iotController,
 		registry,
 		notifier,
 		logger,
@@ -97,6 +100,42 @@ func createAudioSource(cfg config.AudioConfig, logger *slog.Logger) application.
 		logger.Warn("unknown audio source, using http", "source", cfg.Source)
 		return audio.NewHTTPSource(cfg.HTTPAddr, cfg.AuthToken, logger)
 	}
+}
+
+func createSTTClient(cfg *config.Config, logger *slog.Logger) application.SpeechToText {
+	if cfg.OpenAI.APIKey == "" {
+		logger.Info("no OpenAI API key configured, using noop STT (text commands only)")
+		return &application.NoopSTT{}
+	}
+	logger.Info("using OpenAI Whisper for speech-to-text")
+	return openai.NewWhisperClient(cfg.OpenAI.APIKey, cfg.OpenAI.Language)
+}
+
+func createIntentParser(cfg *config.Config, logger *slog.Logger) (application.IntentParser, error) {
+	// Prefer Anthropic if configured, otherwise use Gemini
+	if cfg.Anthropic.APIKey != "" {
+		logger.Info("using Anthropic Claude for intent parsing", "model", cfg.Anthropic.Model)
+		return anthropic.NewClaudeClient(cfg.Anthropic.APIKey, cfg.Anthropic.Model), nil
+	}
+	if cfg.Gemini.APIKey != "" {
+		logger.Info("using Google Gemini for intent parsing", "model", cfg.Gemini.Model)
+		return gemini.NewClient(cfg.Gemini.APIKey, cfg.Gemini.Model), nil
+	}
+	return nil, fmt.Errorf("no LLM API key configured: set either anthropic.api_key or gemini.api_key")
+}
+
+func createIoTBackend(cfg *config.Config, logger *slog.Logger) (application.DeviceController, application.DeviceRegistry, time.Duration) {
+	logger.Info("using Home Assistant for device control", "url", cfg.HomeAssistant.URL)
+	haClient := homeassistant.NewClient(cfg.HomeAssistant.URL, cfg.HomeAssistant.Token)
+	registry := homeassistant.NewRegistry(haClient, logger)
+
+	syncInterval, err := time.ParseDuration(cfg.HomeAssistant.SyncInterval)
+	if err != nil {
+		logger.Warn("invalid sync interval, using default", "error", err)
+		syncInterval = 5 * time.Minute
+	}
+
+	return haClient, registry, syncInterval
 }
 
 func setupLogger(cfg config.LogConfig) *slog.Logger {
