@@ -125,8 +125,9 @@ To receive commands from Alexa, you need to expose your RPi to the internet.
 ### Cloudflare Tunnel (Recommended - Free, No Domain Required)
 
 1. **Create a tunnel in Cloudflare Dashboard**:
-   - Go to https://one.dash.cloudflare.com
-   - Create a free account (select the Free plan)
+   - Go to https://dash.cloudflare.com and create a free account
+   - In the left sidebar, click **Zero Trust**
+   - If prompted, select the **Free plan** (up to 50 users)
    - Go to **Networks** → **Tunnels**
    - Click **Create a tunnel** → Select **Cloudflared** → Name it `smart-home`
    - Copy the **tunnel token**
