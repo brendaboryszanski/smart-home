@@ -23,9 +23,8 @@ Alexa → Cloudflare Tunnel → Raspberry Pi → Home Assistant
 
 ### 1.1 Create Cloudflare Account and Tunnel
 
-1. Go to https://dash.cloudflare.com and create a free account
-2. Go to **Zero Trust** (left sidebar)
-3. Go to **Networks** → **Tunnels**
+1. Go to https://one.dash.cloudflare.com and create a free account (select the Free plan)
+2. Go to **Networks** → **Tunnels** (left sidebar)
 4. Click **Create a tunnel**
 5. Select **Cloudflared** and click **Next**
 6. Name your tunnel: `smart-home`
