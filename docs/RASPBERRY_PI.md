@@ -122,52 +122,37 @@ homeassistant:
 
 To receive commands from Alexa, you need to expose your RPi to the internet.
 
-### Option 1: Cloudflare Tunnel (Recommended)
+### Cloudflare Tunnel (Recommended - Free, No Domain Required)
 
+1. **Create a tunnel in Cloudflare Dashboard**:
+   - Go to https://dash.cloudflare.com
+   - Create a free account
+   - Go to **Zero Trust** → **Networks** → **Tunnels**
+   - Click **Create a tunnel** → Select **Cloudflared** → Name it `smart-home`
+   - Copy the **tunnel token**
+   - Add a public hostname:
+     - Subdomain: `smart-home`
+     - Domain: `cfargotunnel.com` (free)
+     - Service: `HTTP` → `localhost:8080`
+
+2. **Install and run on RPi**:
 ```bash
 # Install cloudflared
 curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -o cloudflared
 chmod +x cloudflared
 sudo mv cloudflared /usr/local/bin/
 
-# Authenticate with Cloudflare
-cloudflared tunnel login
+# Install as service with your tunnel token
+sudo cloudflared service install YOUR_TUNNEL_TOKEN
 
-# Create a tunnel
-cloudflared tunnel create smart-home
-
-# Configure the tunnel (edit ~/.cloudflared/config.yml)
-cat > ~/.cloudflared/config.yml << EOF
-tunnel: YOUR_TUNNEL_ID
-credentials-file: /home/pi/.cloudflared/YOUR_TUNNEL_ID.json
-
-ingress:
-  - hostname: home.yourdomain.com
-    service: http://localhost:8080
-  - service: http_status:404
-EOF
-
-# Add DNS record
-cloudflared tunnel route dns smart-home home.yourdomain.com
-
-# Run the tunnel
-cloudflared tunnel run smart-home
+# Enable and start
+sudo systemctl enable cloudflared
+sudo systemctl start cloudflared
 ```
 
-### Option 2: ngrok (Quick testing)
+Your free URL will be: `https://smart-home-XXXXX.cfargotunnel.com`
 
-```bash
-# Install ngrok
-curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-sudo apt update && sudo apt install ngrok
-
-# Authenticate
-ngrok config add-authtoken YOUR_TOKEN
-
-# Expose port 8080
-ngrok http 8080
-```
+See [alexa/SETUP.md](../alexa/SETUP.md) for complete Alexa skill setup instructions.
 
 ## Troubleshooting
 

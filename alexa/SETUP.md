@@ -8,33 +8,44 @@
 - [ ] AWS account (free): https://aws.amazon.com/free
 - [ ] Amazon Developer account (free): https://developer.amazon.com
 - [ ] Cloudflare account (free): https://cloudflare.com
-- [ ] A domain (from $1/year on Cloudflare or Namecheap)
 - [ ] Raspberry Pi with Docker installed
+
+**Note:** You do NOT need to buy a domain. Cloudflare provides a free subdomain for your tunnel.
 
 ## Estimated time: 30-45 minutes
 
 ---
 
-## Part 1: Domain and Cloudflare (10 min)
+## Part 1: Cloudflare Tunnel Setup (10 min)
 
-### 1.1 Buy a domain
+### 1.1 Create Cloudflare Account
 
-**Option A: Cloudflare Registrar** (recommended)
 1. Go to https://dash.cloudflare.com
-2. Create account
-3. "Domain Registration" → "Register Domain"
-4. Search for a cheap domain (e.g., `yourhome.xyz` ~$1/year)
-5. Purchase
+2. Create a free account
 
-**Option B: Already have a domain**
-1. In Cloudflare, "Add a Site"
-2. Follow instructions to change nameservers
+### 1.2 Create a Tunnel (via Zero Trust Dashboard)
 
-### 1.2 Verify domain is active
-```bash
-dig yourhome.xyz
-# Should show Cloudflare nameservers
-```
+1. In Cloudflare dashboard, go to **Zero Trust** (left sidebar)
+2. Go to **Networks** → **Tunnels**
+3. Click **Create a tunnel**
+4. Select **Cloudflared** and click **Next**
+5. Name your tunnel: `smart-home`
+6. Click **Save tunnel**
+7. **Copy the tunnel token** - you'll need this for the RPi
+
+### 1.3 Configure Public Hostname
+
+After creating the tunnel:
+1. Click on your tunnel → **Public Hostname** tab
+2. Click **Add a public hostname**
+3. Configure:
+   - **Subdomain**: `smart-home` (or any name you want)
+   - **Domain**: Select `cfargotunnel.com` (free) or your own domain if you have one
+   - **Service Type**: `HTTP`
+   - **URL**: `localhost:8080`
+4. Click **Save hostname**
+
+Your free URL will be: `https://smart-home-XXXXX.cfargotunnel.com`
 
 ---
 
@@ -55,7 +66,7 @@ cd smart-home
 ```bash
 cp config.example.yaml config.yaml
 nano config.yaml
-# Add your API keys for OpenAI, Anthropic, and Tuya
+# Add your API key for Gemini (or Anthropic) and Home Assistant URL/token
 ```
 
 ### 2.4 Start the service
@@ -67,23 +78,28 @@ curl http://localhost:8080/health
 # Should respond: {"status":"ok"}
 ```
 
-### 2.5 Install Cloudflare Tunnel
-```bash
-chmod +x scripts/setup-tunnel.sh
-./scripts/setup-tunnel.sh home.yourdomain.xyz
-```
+### 2.5 Install and Run Cloudflare Tunnel
 
-This will:
-1. Download cloudflared
-2. Open browser for Cloudflare login
-3. Create the tunnel
-4. Configure DNS automatically
-5. Install as a service
+Use the tunnel token you copied from the Cloudflare dashboard:
+
+```bash
+# Install cloudflared
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -o cloudflared
+chmod +x cloudflared
+sudo mv cloudflared /usr/local/bin/
+
+# Run with your tunnel token (replace YOUR_TUNNEL_TOKEN)
+sudo cloudflared service install YOUR_TUNNEL_TOKEN
+
+# Enable and start the service
+sudo systemctl enable cloudflared
+sudo systemctl start cloudflared
+```
 
 ### 2.6 Verify tunnel
 ```bash
-# From anywhere with internet
-curl https://home.yourdomain.xyz/health
+# From anywhere with internet (use your tunnel URL from Part 1)
+curl https://smart-home-XXXXX.cfargotunnel.com/health
 # Should respond: {"status":"ok"}
 ```
 
@@ -135,7 +151,7 @@ docker compose up -d
 1. Tab "Configuration" → "Environment variables"
 2. Click "Edit" → "Add environment variable"
 3. Add both:
-   - Key: `SMART_HOME_URL` → Value: `https://home.yourdomain.xyz`
+   - Key: `SMART_HOME_URL` → Value: `https://smart-home-XXXXX.cfargotunnel.com` (your tunnel URL)
    - Key: `AUTH_TOKEN` → Value: `your_token_from_step_2.7`
 4. Save
 
@@ -250,10 +266,10 @@ docker compose logs -f
 docker compose restart
 
 # Test endpoint manually (with auth token)
-curl -X POST https://home.yourdomain.xyz/alexa?token=your_token_here -d "prende la luz"
+curl -X POST https://YOUR_TUNNEL_URL/alexa?token=your_token_here -d "prende la luz"
 
 # Or using header
-curl -X POST https://home.yourdomain.xyz/alexa \
+curl -X POST https://YOUR_TUNNEL_URL/alexa \
   -H "X-Auth-Token: your_token_here" \
   -d "prende la luz"
 ```
@@ -283,11 +299,11 @@ If you want to skip Lambda and connect Alexa directly to your RPI:
 
 ### Setup:
 
-1. Follow steps 1-2 from above (Domain + RPI with token)
+1. Follow steps 1-2 from above (Cloudflare Tunnel + RPI with token)
 2. Create Alexa Skill (Part 4 steps 4.1-4.3)
 3. In step 4.4 (Endpoint), instead of Lambda:
    - Select: **HTTPS**
-   - Default Region: `https://home.yourdomain.xyz/alexa?token=your_token_here`
+   - Default Region: `https://YOUR_TUNNEL_URL/alexa?token=your_token_here`
    - SSL Certificate: **My development endpoint is a sub-domain of a domain that has a wildcard certificate from a certificate authority**
 4. Save and test
 
