@@ -122,36 +122,38 @@ homeassistant:
 
 To receive commands from Alexa, you need to expose your RPi to the internet.
 
-### Cloudflare Tunnel (Recommended - Free, No Domain Required)
+### ngrok (Recommended - Free Static Domain)
 
-1. **Create a tunnel in Cloudflare Dashboard**:
-   - Go to https://dash.cloudflare.com and create a free account
-   - In the left sidebar, click **Zero Trust**
-   - If prompted, select the **Free plan** (up to 50 users)
-   - Go to **Networks** → **Tunnels**
-   - Click **Create a tunnel** → Select **Cloudflared** → Name it `smart-home`
-   - Copy the **tunnel token**
-   - Add a public hostname:
-     - Subdomain: `smart-home`
-     - Domain: `cfargotunnel.com` (free)
-     - Service: `HTTP` → `localhost:8080`
+1. **Create an ngrok account**:
+   - Go to https://dashboard.ngrok.com and sign up
+   - Get your authtoken from https://dashboard.ngrok.com/get-started/your-authtoken
+   - Claim your free static domain at https://dashboard.ngrok.com/domains (click "New Domain")
 
-2. **Install and run on RPi**:
+2. **Configure environment variables**:
+
+Add to your `.env` file:
 ```bash
-# Install cloudflared
-curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -o cloudflared
-chmod +x cloudflared
-sudo mv cloudflared /usr/local/bin/
-
-# Install as service with your tunnel token
-sudo cloudflared service install YOUR_TUNNEL_TOKEN
-
-# Enable and start
-sudo systemctl enable cloudflared
-sudo systemctl start cloudflared
+NGROK_AUTHTOKEN=your_authtoken_here
+NGROK_DOMAIN=your-domain.ngrok-free.dev
 ```
 
-Your free URL will be: `https://smart-home-XXXXX.cfargotunnel.com`
+3. **Run with Docker Compose**:
+
+The `docker-compose.rpi.yml` includes the ngrok service. Just run:
+```bash
+docker-compose -f docker-compose.rpi.yml up -d
+```
+
+4. **Verify the tunnel**:
+```bash
+# Check ngrok status
+curl http://localhost:4040/api/tunnels
+
+# Test your endpoint
+curl https://your-domain.ngrok-free.dev/health
+```
+
+Your URL will be: `https://your-domain.ngrok-free.dev`
 
 See [alexa/SETUP.md](../alexa/SETUP.md) for complete Alexa skill setup instructions.
 
