@@ -4,6 +4,7 @@ bin/
 
 # Config with secrets
 config.yaml
+.env
 
 # Audio files
 audio/*.wav

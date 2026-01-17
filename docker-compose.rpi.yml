@@ -21,8 +21,19 @@ services:
       - TUYA_CLIENT_ID=${TUYA_CLIENT_ID}
       - TUYA_SECRET=${TUYA_SECRET}
       - ALEXA_AUTH_TOKEN=${ALEXA_AUTH_TOKEN:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - HOMEASSISTANT_TOKEN=${HOMEASSISTANT_TOKEN:-}
       - PUSHOVER_TOKEN=${PUSHOVER_TOKEN:-}
       - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY:-}
       - PULSE_SERVER=unix:/run/user/1000/pulse/native
+    restart: unless-stopped
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    command: http --domain=${NGROK_DOMAIN} assistant:8080
+    ports:
+      - "4040:4040"
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     restart: unless-stopped
 
