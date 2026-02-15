@@ -3,8 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
+    network_mode: host
     volumes:
       - ./config.yaml:/app/config.yaml:ro
       - ./audio:/app/audio
@@ -12,7 +11,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - HOMEASSISTANT_TOKEN=${HOMEASSISTANT_TOKEN}
+      - HOMEASSISTANT_TOKEN=${HOMEASSISTANT_TOKEN:-}
       - ALEXA_AUTH_TOKEN=${ALEXA_AUTH_TOKEN:-}
       - PUSHOVER_TOKEN=${PUSHOVER_TOKEN:-}
       - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY:-}
