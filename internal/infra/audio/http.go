@@ -2,6 +2,7 @@ package audio
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -173,45 +174,127 @@ func (h *HTTPSource) handleText(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type alexaRequest struct {
+	Version string `json:"version"`
+	Request struct {
+		Type   string `json:"type"`
+		Intent struct {
+			Name  string `json:"name"`
+			Slots map[string]struct {
+				Value string `json:"value"`
+			} `json:"slots"`
+		} `json:"intent"`
+	} `json:"request"`
+}
+
+func alexaResponse(text string, endSession bool) []byte {
+	resp := fmt.Sprintf(`{
+		"version": "1.0",
+		"response": {
+			"outputSpeech": {
+				"type": "PlainText",
+				"text": %q
+			},
+			"shouldEndSession": %t
+		}
+	}`, text, endSession)
+	return []byte(resp)
+}
+
 func (h *HTTPSource) handleAlexa(w http.ResponseWriter, r *http.Request) {
-	// Verify auth token if configured
 	if h.authToken != "" {
-		// Check header first
 		token := r.Header.Get("X-Auth-Token")
-		// If not in header, check query parameter
 		if token == "" {
 			token = r.URL.Query().Get("token")
 		}
 
 		if token != h.authToken {
 			h.logger.Warn("unauthorized alexa request", "remote_addr", r.RemoteAddr)
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(alexaResponse("No autorizado", true))
 			return
 		}
 	}
 
-	data, err := io.ReadAll(io.LimitReader(r.Body, 4096))
+	data, err := io.ReadAll(io.LimitReader(r.Body, 8192))
 	if err != nil {
-		http.Error(w, "failed to read body", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("Error al leer la solicitud", true))
 		return
 	}
 	defer r.Body.Close()
 
-	text := string(data)
-	if text == "" {
-		http.Error(w, "empty text", http.StatusBadRequest)
+	var alexaReq alexaRequest
+	if err := json.Unmarshal(data, &alexaReq); err != nil {
+		h.logger.Error("parsing alexa request", "error", err, "body", string(data))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("No pude entender la solicitud", true))
 		return
 	}
 
+	h.logger.Info("received alexa request", "type", alexaReq.Request.Type, "intent", alexaReq.Request.Intent.Name)
+
+	switch alexaReq.Request.Type {
+	case "LaunchRequest":
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("Hola, decime qué querés hacer", false))
+		return
+
+	case "SessionEndedRequest":
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("Chau", true))
+		return
+
+	case "IntentRequest":
+		// handled below
+
+	default:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("No entendí el pedido", true))
+		return
+	}
+
+	intentName := alexaReq.Request.Intent.Name
+	if intentName == "AMAZON.HelpIntent" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("Podés decirme cosas como: encendé la luz de la cocina, o activá la escena película", false))
+		return
+	}
+	if intentName == "AMAZON.StopIntent" || intentName == "AMAZON.CancelIntent" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("Chau", true))
+		return
+	}
+
+	commandSlot, ok := alexaReq.Request.Intent.Slots["command"]
+	if !ok || commandSlot.Value == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("No entendí el comando, probá de nuevo", false))
+		return
+	}
+
+	text := commandSlot.Value
 	marker := []byte(domain.TextCommandPrefix + text)
 
 	select {
 	case h.audioChan <- marker:
 		h.logger.Info("received command from Alexa", "text", text)
-		w.WriteHeader(http.StatusAccepted)
-		fmt.Fprint(w, `{"status":"ok","message":"Comando recibido"}`)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse(fmt.Sprintf("Ejecutando: %s", text), true))
 	default:
-		http.Error(w, "queue full", http.StatusServiceUnavailable)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(alexaResponse("Estoy ocupado, probá en un momento", true))
 	}
 }
 
